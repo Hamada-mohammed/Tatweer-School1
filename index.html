@@ -927,7 +927,259 @@
     function triggerFingerprintDemo() {
       document.getElementById('fingerprintBanner').classList.remove('hidden');
     }
+// ==========================================
+// 1. صلاحيات رئيس القسم: الاعتماد والإرجاع
+// ==========================================
+function renderApprovalTable() {
+  const tbody = document.getElementById('approvalTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  
+  schoolData.forEach(item => {
+    const tr = document.createElement('tr');
+    const hasMedia = item.mediaType && item.mediaType !== 'none';
+    
+    let statusBadge = '';
+    if (item.status === 'approved') {
+      statusBadge = '<span class="text-xs text-emerald-600 font-bold">معتمد ✔</span>';
+    } else if (item.status === 'rejected') {
+      statusBadge = `<span class="text-xs text-rose-600 font-bold" title="${item.rejectReason || ''}">معاد للتعديل ⚠️</span>`;
+    } else {
+      statusBadge = '<span class="text-xs text-amber-600 font-semibold">بانتظار التدقيق</span>';
+    }
 
+    tr.innerHTML = `
+      <td class="py-3 px-3 font-semibold text-slate-800">${item.title}</td>
+      <td class="py-3 px-3 text-slate-500 text-xs">${item.subject} (${item.grade})</td>
+      <td class="py-3 px-3 text-slate-600 text-xs">${item.teacher}</td>
+      <td class="py-3 px-3 text-xs">
+        ${hasMedia ? `<button onclick="openMediaPreview(${item.id})" class="bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-1 rounded-lg font-bold">فحص المرفق</button>` : '<span class="text-slate-400">نص</span>'}
+      </td>
+      <td class="py-3 px-3">${statusBadge}</td>
+      <td class="py-3 px-3 text-center space-x-1 space-x-reverse">
+        ${item.status !== 'approved' ? `
+          <button onclick="approveByHOD(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded-lg font-bold">اعتماد</button>
+          <button onclick="rejectByHOD(${item.id})" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1 rounded-lg font-bold">إرجاع للتعديل</button>
+        ` : '<span class="text-xs text-slate-400">مكتمل</span>'}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function approveByHOD(id) {
+  const item = schoolData.find(i => i.id === id);
+  if (item) {
+    item.status = 'approved';
+    item.approved = true;
+    item.isPublishedToClass = false; // تفعيل إمكانية النشر للمعلم
+    renderApprovalTable();
+    if (typeof renderTeacherTable === 'function') renderTeacherTable();
+    alert('تم اعتماد ورقة العمل بنجاح.');
+  }
+}
+
+function rejectByHOD(id) {
+  const reason = prompt('اكتب الملاحظات أو سبب الإرجاع للمعلم لتعديله:');
+  if (reason) {
+    const item = schoolData.find(i => i.id === id);
+    if (item) {
+      item.status = 'rejected';
+      item.approved = false;
+      item.rejectReason = reason;
+      renderApprovalTable();
+      if (typeof renderTeacherTable === 'function') renderTeacherTable();
+      alert('تمت إعادة ورقة العمل إلى المعلم مع الملاحظات.');
+    }
+  }
+}
+
+// ==========================================
+// 2. بوابة المعلم: زر النشر في المحتوى بعد الاعتماد
+// ==========================================
+function renderTeacherTable() {
+  const tbody = document.getElementById('teacherTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  schoolData.forEach(item => {
+    const tr = document.createElement('tr');
+    const hasMedia = item.mediaType && item.mediaType !== 'none';
+
+    let actionBtn = '';
+    if (item.status === 'approved') {
+      if (item.isPublishedToClass) {
+        actionBtn = '<span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-lg font-bold">منشور في محتوى الصف 🌐</span>';
+      } else {
+        actionBtn = `<button onclick="publishToClassContent(${item.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2.5 py-1 rounded-lg font-bold shadow-sm animate-pulse">نشر في محتوى الصف 🚀</button>`;
+      }
+    } else if (item.status === 'rejected') {
+      actionBtn = `<span class="text-xs text-rose-700 font-bold cursor-pointer" onclick="alert('ملاحظات رئيس القسم: ${item.rejectReason}')">معاد: اضغط لقراءة الملاحظة ⚠️</span>`;
+    } else {
+      actionBtn = '<span class="text-xs text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">قيد التدقيق</span>';
+    }
+
+    tr.innerHTML = `
+      <td class="py-3 px-3 font-semibold text-slate-800">${item.title}</td>
+      <td class="py-3 px-3 text-slate-500 text-xs">${item.subject} (${item.grade})</td>
+      <td class="py-3 px-3 text-xs">
+        ${hasMedia ? `<button onclick="openMediaPreview(${item.id})" class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg font-bold">معاينة</button>` : '<span class="text-slate-400">بدون</span>'}
+      </td>
+      <td class="py-3 px-3 text-center">${actionBtn}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function publishToClassContent(id) {
+  const item = schoolData.find(i => i.id === id);
+  if (item) {
+    item.isPublishedToClass = true;
+    alert(`تم بنجاح رفع ورقة العمل (${item.title}) إلى محتوى صف (${item.grade}) وأصبحت متاحة للجميع.`);
+    renderTeacherTable();
+    if (typeof renderParentMaterials === 'function') renderParentMaterials();
+  }
+}
+
+// ==========================================
+// 3. رفع الأخبار مع الصور وعرضها
+// ==========================================
+function handleAddNewItem(e) {
+  e.preventDefault();
+  const tag = document.getElementById('newsTag').value;
+  const title = document.getElementById('newsTitle').value;
+  const desc = document.getElementById('newsContent').value;
+  const imgInput = document.getElementById('newsImageInput');
+
+  if (imgInput && imgInput.files && imgInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      saveNewsItem(tag, title, desc, evt.target.result);
+    };
+    reader.readAsDataURL(imgInput.files[0]);
+  } else {
+    saveNewsItem(tag, title, desc, null);
+  }
+  e.target.reset();
+}
+
+function saveNewsItem(tag, title, desc, image) {
+  newsList.unshift({ tag, title, desc, image, time: 'الآن' });
+  alert('تم نشر الخبر بنجاح.');
+  renderNews();
+  renderDevControls();
+}
+
+function renderNews() {
+  const container = document.getElementById('newsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  
+  newsList.forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'bg-white p-4 rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col justify-between';
+    card.innerHTML = `
+      <div>
+        ${n.image ? `<img src="${n.image}" alt="${n.title}" class="w-full h-36 object-cover rounded-xl mb-3" />` : ''}
+        <span class="text-[11px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">${n.tag}</span>
+        <h4 class="font-bold text-sm mt-2 mb-1 text-slate-900">${n.title}</h4>
+        <p class="text-xs text-slate-600 leading-relaxed">${n.desc}</p>
+      </div>
+      <span class="text-[10px] text-slate-400 mt-3 block">${n.time}</span>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ==========================================
+// 4. لوحة المطور لحذف أي محتوى وترتيب الأخبار
+// ==========================================
+function renderDevControls() {
+  // إدارة الأخبار
+  const newsDiv = document.getElementById('devNewsList');
+  if (newsDiv) {
+    newsDiv.innerHTML = '';
+    newsList.forEach((n, idx) => {
+      newsDiv.innerHTML += `
+        <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200">
+          <span class="truncate max-w-[120px]">${n.title}</span>
+          <div class="flex items-center gap-1">
+            <button onclick="moveNews(${idx}, -1)" class="px-1.5 py-0.5 bg-slate-100 rounded hover:bg-slate-200">⬆</button>
+            <button onclick="moveNews(${idx}, 1)" class="px-1.5 py-0.5 bg-slate-100 rounded hover:bg-slate-200">⬇</button>
+            <button onclick="deleteNews(${idx})" class="text-rose-600 hover:text-rose-800 font-bold px-1">✕</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // إدارة أوراق العمل
+  const matDiv = document.getElementById('devMaterialsList');
+  if (matDiv) {
+    matDiv.innerHTML = '';
+    schoolData.forEach((m) => {
+      matDiv.innerHTML += `
+        <div class="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200">
+          <span class="truncate max-w-[140px]">${m.title}</span>
+          <button onclick="deleteMaterial(${m.id})" class="text-rose-600 hover:text-rose-800 font-bold text-xs bg-rose-50 px-2 py-0.5 rounded">حذف</button>
+        </div>
+      `;
+    });
+  }
+
+  // إدارة الصفوف والأقسام
+  const stgDiv = document.getElementById('devStagesList');
+  if (stgDiv) {
+    stgDiv.innerHTML = '';
+    for (const [stage, classes] of Object.entries(stageClassesData)) {
+      classes.forEach((c, cIdx) => {
+        stgDiv.innerHTML += `
+          <div class="flex items-center justify-between bg-white p-1.5 rounded-lg border border-slate-200">
+            <span class="truncate max-w-[130px]">${c.name}</span>
+            <button onclick="deleteClass('${stage}', ${cIdx})" class="text-rose-600 hover:text-rose-800 font-bold px-1.5">✕</button>
+          </div>
+        `;
+      });
+    }
+  }
+}
+
+function moveNews(idx, direction) {
+  const target = idx + direction;
+  if (target >= 0 && target < newsList.length) {
+    const temp = newsList[idx];
+    newsList[idx] = newsList[target];
+    newsList[target] = temp;
+    renderNews();
+    renderDevControls();
+  }
+}
+
+function deleteNews(idx) {
+  if (confirm('هل أنت متأكد من حذف هذا الخبر نهائياً؟')) {
+    newsList.splice(idx, 1);
+    renderNews();
+    renderDevControls();
+  }
+}
+
+function deleteMaterial(id) {
+  if (confirm('هل تريد حذف ورقة العمل هذه بالكامل من المنصة؟')) {
+    schoolData = schoolData.filter(i => i.id !== id);
+    renderTeacherTable();
+    renderApprovalTable();
+    renderDevControls();
+    if (typeof renderParentMaterials === 'function') renderParentMaterials();
+  }
+}
+
+function deleteClass(stage, idx) {
+  if (confirm('هل ترغب بحذف هذا الصف من المرحلة؟')) {
+    stageClassesData[stage].splice(idx, 1);
+    if (typeof selectStage === 'function') selectStage(currentActiveStage);
+    renderDevControls();
+  }
+}
     applySettings();
     renderNews();
     selectStage('primary');
