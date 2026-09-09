@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="docTitle">منصة المدرسة الذكية المتكاملة</title>
+  <link rel="icon" type="image/svg+xml" href="logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link id="fontLink" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cairo:wght@400;600;800&family=Almarai:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <style>
+    :root {
+      --primary-color: #1e1b4b;
+      --accent-color: #4f46e5;
+      --active-font: 'Tajawal', sans-serif;
+    }
+    body { font-family: var(--active-font); }
+    .bg-custom-primary { background-color: var(--primary-color) !important; }
+    .bg-custom-accent { background-color: var(--accent-color) !important; }
+    .text-custom-accent { color: var(--accent-color) !important; }
+    .border-custom-accent { border-color: var(--accent-color) !important; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col transition-colors duration-300">
+
+  <!-- شريط الملاحة الرئيسي -->
+  <header id="mainHeader" class="bg-custom-primary text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center gap-3 select-none">
+        <img id="siteLogoDisplay" src="logo.svg" alt="الشعار" onclick="handleSecretLogoClick()" title="شعار المنصة" class="w-10 h-10 rounded-xl cursor-pointer hover:scale-105 transition transform shadow-sm" />
+        <div>
+          <h1 id="siteNameDisplay" class="text-xl font-extrabold tracking-wide">منصة المدرسة الذكية</h1>
+          <p id="siteTaglineDisplay" class="text-xs text-indigo-200">التعليم العام والتربية الخاصة</p>
+        </div>
+      </div>
+      
+      <nav class="flex flex-wrap items-center gap-2 text-sm font-medium">
+        <button onclick="switchTab('home')" id="tab-home" class="px-3 py-1.5 rounded-lg bg-white/20 transition hover:bg-white/30">الرئيسية</button>
+        <button onclick="switchTab('classes')" id="tab-classes" class="px-3 py-1.5 rounded-lg hover:bg-white/10 transition">المحتوى والصفوف</button>
+        
+        <button onclick="switchTab('teacher')" id="tab-teacher" class="hidden px-3 py-1.5 rounded-lg hover:bg-white/10 transition">بوابة المعلم</button>
+        <button onclick="switchTab('approval')" id="tab-approval" class="hidden px-3 py-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-600 text-white transition flex items-center gap-1">
+          <span>✔️</span> اعتماد رئيس القسم
+        </button>
+        <button onclick="switchTab('admin')" id="tab-admin" class="hidden px-3 py-1.5 rounded-lg hover:bg-white/10 transition">لوحة الإدارة العامة</button>
+        <button onclick="switchTab('parent')" id="tab-parent" class="hidden px-3 py-1.5 rounded-lg hover:bg-white/10 transition">بوابة ولي الأمر</button>
+        
+        <button onclick="switchTab('dev-settings')" id="tab-dev-settings" class="hidden px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white transition flex items-center gap-1">
+          <span>🛠️</span> لوحة المطور
+        </button>
+
+        <div id="authNavArea" class="mr-2">
+          <button onclick="switchTab('login')" id="tab-login" class="bg-custom-accent hover:opacity-90 text-white px-4 py-1.5 rounded-xl font-bold transition shadow-sm">
+            تسجيل الدخول
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- تنبيه البصمة الصباحية -->
+  <div id="fingerprintBanner" class="bg-amber-500 text-white text-sm px-4 py-2 text-center font-medium hidden flex justify-center items-center gap-2">
+    <span>⏰ <strong>تنبيه البصمة:</strong> موعد تسجيل البصمة الصباحية متاح الآن. يرجى تسجيل الحضور.</span>
+    <button onclick="document.getElementById('fingerprintBanner').classList.add('hidden')" class="text-xs bg-white/20 px-2 py-0.5 rounded hover:bg-white/30">إغلاق</button>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- 1. شاشة تسجيل الدخول الموحدة -->
+    <section id="sec-login" class="hidden py-8">
+      <div class="max-w-md mx-auto bg-white p-8 rounded-3xl border border-slate-200 shadow-lg">
+        <div class="text-center mb-6">
+          <img src="logo.svg" alt="الشعار" class="w-16 h-16 mx-auto mb-3" />
+          <h3 class="text-xl font-bold text-slate-800">تسجيل الدخول الموحد</h3>
+          <p class="text-xs text-slate-500 mt-1">أدخل بريدك وكلمة المرور لتوجيهك لصلاحيتك تلقائياً</p>
+        </div>
+
+        <form onsubmit="handleUnifiedLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">البريد الإلكتروني</label>
+            <input type="email" id="loginEmail" required placeholder="name@school.com" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:border-custom-accent focus:outline-none" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">كلمة المرور</label>
+            <input type="password" id="loginPassword" required placeholder="******" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:border-custom-accent focus:outline-none" />
+          </div>
+
+          <button type="submit" class="w-full bg-custom-accent hover:opacity-90 text-white font-bold py-3 rounded-xl transition text-sm shadow">
+            دخول المنصة
+          </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-500 space-y-1 bg-slate-50 p-3 rounded-xl">
+          <p class="font-bold text-slate-700">حسابات تجريبية سريعة:</p>
+          <p>• <strong>رئيس قسم:</strong> hod@school.com / 123456</p>
+          <p>• <strong>معلم:</strong> teacher@school.com / 123456</p>
+          <p>• <strong>إدارة عامة:</strong> admin@school.com / admin123</p>
+          <p>• <strong>ولي أمر:</strong> parent@school.com (أو أي إيميل عادي)</p>
+          <p>• <strong>المطور:</strong> dev@school.com / dev2026</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. الصفحة الرئيسية والأخبار -->
+    <section id="sec-home" class="space-y-8">
+      <div class="bg-custom-accent rounded-3xl p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-center gap-6 transition-colors">
+        <div class="max-w-2xl space-y-3">
+          <span class="inline-block bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">بوابة التعليم والتواصل</span>
+          <h2 class="text-3xl font-bold leading-snug">بيئة تفاعلية شاملة للمراحل التعليمية والتربية الخاصة</h2>
+          <p class="text-indigo-100 text-sm leading-relaxed">متابعة دقيقة للأداء الأكاديمي، اعتماد أوراق العمل والأنشطة، ومواكبة تطور الطلاب أولاً بأول.</p>
+        </div>
+        <div class="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/20 text-center min-w-[220px]">
+          <span class="text-3xl">📅</span>
+          <p class="text-xs mt-2 text-indigo-100">العام الدراسي الحالي</p>
+          <h3 class="text-lg font-bold">الفصل الدراسي الأول</h3>
+        </div>
+      </div>
+
+      <div id="homeNewsSection">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <span>📢</span> آخر الأخبار والتنويهات المدرسية
+          </h3>
+          <span class="text-xs text-slate-400">تحديث فوري</span>
+        </div>
+        <div id="newsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      </div>
+    </section>
+
+    <!-- 3. المحتوى والصفوف -->
+    <section id="sec-classes" class="hidden space-y-6">
+      <div class="border-b pb-4">
+        <h3 class="text-2xl font-bold text-slate-800">المحتوى التعليمي والصفوف</h3>
+        <p class="text-sm text-slate-500 mt-1">اختر المرحلة لاستعراض أوراق العمل والتدريبات والشروحات المعتمدة:</p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button onclick="selectStage('primary')" id="stage-btn-primary" class="stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-custom-accent text-white shadow-sm transition">
+          المرحلة الابتدائية
+        </button>
+        <button onclick="selectStage('middle')" id="stage-btn-middle" class="stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition">
+          المرحلة المتوسطة
+        </button>
+        <button onclick="selectStage('secondary')" id="stage-btn-secondary" class="stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition">
+          المرحلة الثانوية
+        </button>
+        <button onclick="selectStage('special')" id="stage-btn-special" class="stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 transition flex items-center gap-1.5">
+          <span>🌱</span> قسم التربية الخاصة
+        </button>
+      </div>
+
+      <div id="classesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-6"></div>
+    </section>
+
+    <!-- 4. بوابة المعلم -->
+    <section id="sec-teacher" class="hidden space-y-6">
+      <div class="bg-blue-50 border border-blue-200 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h3 class="font-bold text-blue-900 text-lg" id="teacherGreetingTitle">بوابة المعلم</h3>
+          <p class="text-xs text-blue-700" id="teacherRoleDesc">إدارة أوراق العمل والأنشطة ومتابعة البصمة</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="triggerFingerprintDemo()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+            <span>🔔</span> تنبيه البصمة
+          </button>
+          <button onclick="logout()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs px-3 py-2 rounded-xl font-bold transition">
+            تسجيل خروج
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="font-bold text-slate-800 border-b pb-2 flex items-center justify-between">
+            <span>➕ رفع محتوى أو ملف جديد</span>
+            <span class="text-xs font-normal text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">يدعم PDF وصور وفيديو</span>
+          </h4>
+          <form onsubmit="handleUploadWithMedia(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">المادة الدراسية</label>
+              <select id="itemSubject" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white">
+                <option>لغتي الجميلة</option>
+                <option>التربية الخاصة (صعوبات تعلم)</option>
+                <option>الرياضيات</option>
+                <option>العلوم</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">المرحلة / الصف</label>
+              <select id="itemGrade" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white">
+                <option>التربية الخاصة - برامج فردية</option>
+                <option>المرحلة الابتدائية - الصف الثالث</option>
+                <option>المرحلة الابتدائية - الصف الرابع</option>
+                <option>المرحلة الابتدائية - الصف الخامس</option>
+                <option>المرحلة الابتدائية - الصف السادس</option>
+                <option>المرحلة المتوسطة</option>
+                <option>المرحلة الثانوية</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">نوع العمل</label>
+              <select id="itemType" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white">
+                <option>ورقة عمل وتدريبات</option>
+                <option>شرح وملخص درس</option>
+                <option>اختبار إلكتروني</option>
+                <option>نشاط طلابي ومبادرة</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">عنوان العمل</label>
+              <input type="text" id="itemTitle" required placeholder="مثال: تدريب على المبتدأ والخبر" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:border-custom-accent focus:outline-none" />
+            </div>
+
+            <div class="border-t pt-3">
+              <label class="block text-xs font-bold text-slate-700 mb-1">نوع المرفق</label>
+              <select id="mediaTypeSelect" onchange="toggleMediaInputFields()" class="w-full border border-slate-300 rounded-xl p-2 text-xs bg-slate-50">
+                <option value="none">بدون مرفق (نصي)</option>
+                <option value="file">رفع ملف (PDF أو صورة)</option>
+                <option value="video">رابط فيديو (YouTube)</option>
+              </select>
+            </div>
+
+            <div id="fileUploadContainer" class="hidden">
+              <label class="block text-xs text-slate-500 mb-1">اختر الملف من الجهاز:</label>
+              <input type="file" id="mediaFileInput" accept="application/pdf,image/*" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+            </div>
+
+            <div id="videoUrlContainer" class="hidden">
+              <label class="block text-xs text-slate-500 mb-1">رابط YouTube:</label>
+              <input type="url" id="mediaUrlInput" placeholder="https://www.youtube.com/watch?v=..." class="w-full border border-slate-300 rounded-xl p-2 text-xs focus:outline-none" />
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl transition text-sm shadow">
+              إرسال العمل للاعتماد
+            </button>
+          </form>
+        </div>
+
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="font-bold text-slate-800 border-b pb-2 flex justify-between items-center">
+            <span>📋 أعمالي المرفوعة</span>
+            <span class="text-xs text-slate-400 font-normal">مزامنة فورية</span>
+          </h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-sm">
+              <thead>
+                <tr class="text-slate-500 border-b bg-slate-50 text-xs">
+                  <th class="py-2.5 px-3">العنوان</th>
+                  <th class="py-2.5 px-3">المادة / الصف</th>
+                  <th class="py-2.5 px-3">المرفق</th>
+                  <th class="py-2.5 px-3 text-center">حالة الاعتماد</th>
+                </tr>
+              </thead>
+              <tbody id="teacherTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. نافذة اعتماد رئيس القسم -->
+    <section id="sec-approval" class="hidden space-y-6">
+      <div class="bg-emerald-50 border border-emerald-300 p-4 rounded-2xl flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-emerald-950 text-lg">بوابة رئيس القسم - مراجعة واعتماد أوراق العمل</h3>
+          <p class="text-xs text-emerald-700">معاينة الملفات والمرفقات ومنح شارة الاعتماد الرسمية.</p>
+        </div>
+        <button onclick="logout()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs px-3 py-2 rounded-xl font-bold transition">
+          خروج
+        </button>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-right text-sm">
+            <thead>
+              <tr class="text-slate-500 border-b bg-slate-50 text-xs">
+                <th class="py-2.5 px-3">العنوان</th>
+                <th class="py-2.5 px-3">المادة</th>
+                <th class="py-2.5 px-3">المعلم</th>
+                <th class="py-2.5 px-3">المرفق</th>
+                <th class="py-2.5 px-3">الحالة</th>
+                <th class="py-2.5 px-3 text-center">الإجراء</th>
+              </tr>
+            </thead>
+            <tbody id="approvalTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. لوحة الإدارة العامة -->
+    <section id="sec-admin" class="hidden space-y-6">
+      <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-2xl flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-indigo-950 text-lg">لوحة الإدارة العامة للمدرسة</h3>
+          <p class="text-xs text-indigo-700">الإشراف على الحضور وتقارير الانضباط المدرسي.</p>
+        </div>
+        <button onclick="logout()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs px-3 py-2 rounded-xl font-bold transition">
+          خروج
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <p class="text-xs text-slate-400">حضور الكادر اليوم</p>
+          <h3 class="text-3xl font-extrabold text-indigo-600 my-2">100%</h3>
+          <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-semibold">اكتملت البصمات</span>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <p class="text-xs text-slate-400">أوراق العمل المعتمدة</p>
+          <h3 class="text-3xl font-extrabold text-emerald-600 my-2">26</h3>
+          <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-semibold">بواسطة رؤساء الأقسام</span>
+        </div>
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
+          <p class="text-xs text-slate-400">الأنشطة والشروحات</p>
+          <h3 class="text-3xl font-extrabold text-blue-600 my-2">18</h3>
+          <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md font-semibold">مبادرات مدرسية</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. بوابة أولياء الأمور -->
+    <section id="sec-parent" class="hidden space-y-6">
+      <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-2xl flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <h3 class="font-bold text-emerald-950 text-lg">بوابة أولياء الأمور - المتابعة وتحميل المرفقات</h3>
+          <p class="text-xs text-emerald-700">الاطلاع على الملفات والشروحات المعتمدة للطالب.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs bg-emerald-600 text-white px-3 py-1 rounded-full font-bold">الطالب: عبد الله محمد</span>
+          <button onclick="logout()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 text-xs px-3 py-1.5 rounded-xl font-bold transition">
+            خروج
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h4 class="font-bold text-slate-800 border-b pb-2">📂 أوراق العمل والشروحات المتاحة:</h4>
+        <div id="parentMaterialsList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- 8. لوحة المطور السرية -->
+    <section id="sec-dev-settings" class="hidden space-y-6">
+      <div class="bg-amber-50 border border-amber-300 p-5 rounded-2xl flex justify-between items-center">
+        <div>
+          <h3 class="font-bold text-amber-950 text-lg flex items-center gap-2">
+            <span>🛠️</span> لوحة المطور والمصمم (محرر الهوية والصلاحيات)
+          </h3>
+          <p class="text-xs text-amber-800 mt-1">تعديل التصميم وإضافة الكوادر بدون لمس الأكواد.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="resetSettingsToDefault()" class="text-xs bg-white border border-amber-300 text-amber-900 px-3 py-1.5 rounded-lg hover:bg-amber-100 font-bold">
+            استعادة الافتراضي
+          </button>
+          <button onclick="logout()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs px-3 py-1.5 rounded-xl font-bold transition">
+            إغلاق
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
+            <span>🎨</span> الهوية والألوان
+          </h4>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اللون الأساسي</label>
+            <input type="color" id="inputPrimaryColor" onchange="updateLiveTheme()" class="w-full h-10 rounded-lg cursor-pointer border border-slate-300 p-1" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اللون التفاعلي</label>
+            <input type="color" id="inputAccentColor" onchange="updateLiveTheme()" class="w-full h-10 rounded-lg cursor-pointer border border-slate-300 p-1" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">نوع الخط</label>
+            <select id="inputFontFamily" onchange="updateLiveTheme()" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm bg-white">
+              <option value="'Tajawal', sans-serif">خط تجوال</option>
+              <option value="'Cairo', sans-serif">خط كايرو</option>
+              <option value="'Almarai', sans-serif">خط المراعي</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">اسم المدرسة</label>
+            <input type="text" id="inputSiteName" oninput="updateLiveTheme()" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm" />
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
+            <span>📐</span> الأقسام والأخبار
+          </h4>
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer">
+            <span class="text-xs font-semibold">قسم التربية الخاصة</span>
+            <input type="checkbox" id="toggleSpecialEd" onchange="updateLiveTheme()" class="w-4 h-4 accent-indigo-600 cursor-pointer" />
+          </label>
+          <div class="border-t pt-3">
+            <h5 class="font-bold text-xs text-slate-700 mb-2">📰 نشر خبر سريع:</h5>
+            <form onsubmit="handleAddNewItem(event)" class="space-y-2">
+              <input type="text" id="newsTag" required placeholder="تصنيف الخبر" class="w-full border border-slate-300 rounded-xl p-2 text-xs" />
+              <input type="text" id="newsTitle" required placeholder="عنوان الخبر" class="w-full border border-slate-300 rounded-xl p-2 text-xs" />
+              <textarea id="newsContent" rows="2" required placeholder="نص الخبر..." class="w-full border border-slate-300 rounded-xl p-2 text-xs"></textarea>
+              <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded-xl transition text-xs">نشر</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h4 class="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
+            <span>👤</span> تسجيل الكوادر
+          </h4>
+          <form onsubmit="handleCreateStaff(event)" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">الاسم</label>
+              <input type="text" id="newStaffName" required placeholder="أ. حمادة سلامة" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">البريد الإلكتروني</label>
+              <input type="email" id="newStaffEmail" required placeholder="staff@school.com" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">كلمة المرور</label>
+              <input type="password" id="newStaffPass" required placeholder="******" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">الصلاحية</label>
+              <select id="newStaffRole" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white">
+                <option value="hod">رئيس قسم (اعتماد أوراق)</option>
+                <option value="teacher">معلم</option>
+                <option value="admin">إدارة عامة</option>
+              </select>
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition text-xs">تفعيل الحساب</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- نافذة المعاينة المنبثقة -->
+  <div id="mediaModal" class="fixed inset-0 bg-slate-900/75 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h4 id="modalItemTitle" class="font-bold text-slate-800 text-base">معاينة المرفق</h4>
+        <button onclick="closeMediaModal()" class="text-slate-400 hover:text-rose-600 text-xl font-bold p-1">✕</button>
+      </div>
+      <div id="modalItemContent" class="flex-1 overflow-auto flex items-center justify-center min-h-[300px] bg-slate-50 rounded-2xl p-2"></div>
+      <div class="flex justify-end pt-2 border-t">
+        <button onclick="closeMediaModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs px-4 py-2 rounded-xl font-bold">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-white border-t border-slate-200 text-center py-4 text-xs text-slate-500">
+    <span id="footerSchoolName">منصة المدرسة الذكية</span> © 2026 - نظام تعليمي متكامل
+  </footer>
+
+  <script>
+    const defaultSettings = {
+      primaryColor: '#1e1b4b',
+      accentColor: '#4f46e5',
+      fontFamily: "'Tajawal', sans-serif",
+      name: 'منصة المدرسة الذكية',
+      tagline: 'التعليم العام والتربية الخاصة',
+      showSpecialEd: true
+    };
+
+    let currentSettings = JSON.parse(localStorage.getItem('app_school_settings')) || defaultSettings;
+
+    let registeredUsers = [
+      { email: 'dev@school.com', pass: 'dev2026', role: 'dev', name: 'المطور والمصمم', isHOD: false },
+      { email: 'hod@school.com', pass: '123456', role: 'teacher', name: 'أ. حمادة سلامة (رئيس القسم)', isHOD: true },
+      { email: 'teacher@school.com', pass: '123456', role: 'teacher', name: 'أ. سعد الأحمد', isHOD: false },
+      { email: 'admin@school.com', pass: 'admin123', role: 'admin', name: 'إدارة المدرسة', isHOD: false }
+    ];
+
+    let stageClassesData = {
+      primary: [
+        { name: 'الصف الثالث الابتدائي', count: '14 ورقة عمل • 4 اختبارات' },
+        { name: 'الصف الرابع الابتدائي', count: '18 ورقة عمل • 6 اختبارات' },
+        { name: 'الصف الخامس الابتدائي', count: '16 ورقة عمل • 5 اختبارات' },
+        { name: 'الصف السادس الابتدائي', count: '20 ورقة عمل • 8 اختبارات' }
+      ],
+      middle: [
+        { name: 'الصف الأول المتوسط', count: '10 أوراق عمل • 3 اختبارات' },
+        { name: 'الصف الثاني المتوسط', count: '12 ورقة عمل • 4 اختبارات' },
+        { name: 'الصف الثالث المتوسط', count: '15 ورقة عمل • 5 اختبارات' }
+      ],
+      secondary: [
+        { name: 'الصف الأول الثانوي (مسارات)', count: '12 ورقة عمل • 4 اختبارات' },
+        { name: 'الصف الثاني الثانوي', count: '14 ورقة عمل • 5 اختبارات' },
+        { name: 'الصف الثالث الثانوي', count: '18 ورقة عمل • 6 اختبارات' }
+      ],
+      special: [
+        { name: 'برامج صعوبات التعلم (لغتي)', count: 'خطط علاجية وتدريبات مكثفة' },
+        { name: 'جلسات النطق والتخاطب', count: 'أنشطة تفاعلية ومقاطع صوتية' },
+        { name: 'برامج فرط الحركة وتشتت الانتباه', count: 'أوراق عمل مهام قصيرة' },
+        { name: 'الخطط التربوية الفردية (IEP)', count: 'نماذج تقييم وتقارير تطور' }
+      ]
+    };
+
+    let newsList = [
+      { tag: 'إعلان هام', title: 'مسابقة اللغة العربية السنوية', desc: 'انطلاق التصفيات لمسابقات الإملاء والخط والقراءة لجميع الصفوف.', time: 'قبل يومين' },
+      { tag: 'التربية الخاصة', title: 'تفعيل الخطط الفردية المساندة', desc: 'تم إتاحة متابعة الخطط الفردية لجلسات التربية الخاصة عبر بوابة أولياء الأمور.', time: 'أمس' }
+    ];
+
+    let schoolData = [
+      { 
+        id: 1, 
+        title: 'ورقة عمل الفاعل والمفعول به', 
+        subject: 'لغتي الجميلة', 
+        grade: 'الصف الرابع الابتدائي', 
+        type: 'ورقة عمل وتدريبات', 
+        teacher: 'أ. حمادة سلامة', 
+        approved: true,
+        mediaType: 'pdf_sample',
+        mediaData: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'
+      },
+      { 
+        id: 2, 
+        title: 'شرح مرئي لقاعدة الإملاء', 
+        subject: 'لغتي الجميلة', 
+        grade: 'الصف الخامس الابتدائي', 
+        type: 'شرح وملخص درس', 
+        teacher: 'أ. حمادة سلامة', 
+        approved: true,
+        mediaType: 'video',
+        mediaData: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      }
+    ];
+
+    let currentUser = null;
+    let currentActiveStage = 'primary';
+    let secretLogoClicks = 0;
+    let secretClickTimer = null;
+
+    function toggleMediaInputFields() {
+      const type = document.getElementById('mediaTypeSelect').value;
+      const fileBox = document.getElementById('fileUploadContainer');
+      const videoBox = document.getElementById('videoUrlContainer');
+
+      fileBox.classList.add('hidden');
+      videoBox.classList.add('hidden');
+
+      if (type === 'file') fileBox.classList.remove('hidden');
+      if (type === 'video') videoBox.classList.remove('hidden');
+    }
+
+    function handleUploadWithMedia(e) {
+      e.preventDefault();
+      const title = document.getElementById('itemTitle').value;
+      const subject = document.getElementById('itemSubject').value;
+      const grade = document.getElementById('itemGrade').value;
+      const type = document.getElementById('itemType').value;
+      const mediaKind = document.getElementById('mediaTypeSelect').value;
+
+      let mediaType = 'none';
+      let mediaData = null;
+
+      if (mediaKind === 'video') {
+        let url = document.getElementById('mediaUrlInput').value.trim();
+        if (url.includes('watch?v=')) url = url.replace('watch?v=', 'embed/');
+        mediaType = 'video';
+        mediaData = url;
+        saveItem(title, subject, grade, type, mediaType, mediaData);
+      } else if (mediaKind === 'file') {
+        const fileInput = document.getElementById('mediaFileInput');
+        if (fileInput.files && fileInput.files[0]) {
+          const file = fileInput.files[0];
+          mediaType = file.type === 'application/pdf' ? 'pdf' : 'image';
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            mediaData = evt.target.result;
+            saveItem(title, subject, grade, type, mediaType, mediaData);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          saveItem(title, subject, grade, type, 'none', null);
+        }
+      } else {
+        saveItem(title, subject, grade, type, 'none', null);
+      }
+    }
+
+    function saveItem(title, subject, grade, type, mediaType, mediaData) {
+      schoolData.unshift({
+        id: schoolData.length + 1,
+        title,
+        subject,
+        grade,
+        type,
+        teacher: currentUser ? currentUser.name : 'أ. حمادة سلامة',
+        approved: false,
+        mediaType,
+        mediaData
+      });
+
+      document.getElementById('itemTitle').value = '';
+      document.getElementById('mediaTypeSelect').value = 'none';
+      document.getElementById('mediaFileInput').value = '';
+      document.getElementById('mediaUrlInput').value = '';
+      toggleMediaInputFields();
+
+      alert('تم رفع العمل وإرساله لرئيس القسم للاعتماد.');
+      renderTeacherTable();
+    }
+
+    function openMediaPreview(id) {
+      const item = schoolData.find(i => i.id === id);
+      if (!item || item.mediaType === 'none') return;
+
+      document.getElementById('modalItemTitle').innerText = `${item.title} (${item.subject})`;
+      const content = document.getElementById('modalItemContent');
+      content.innerHTML = '';
+
+      if (item.mediaType === 'pdf' || item.mediaType === 'pdf_sample') {
+        content.innerHTML = `<iframe src="${item.mediaData}" class="w-full h-[500px] rounded-xl border border-slate-200"></iframe>`;
+      } else if (item.mediaType === 'image') {
+        content.innerHTML = `<img src="${item.mediaData}" alt="معاينة" class="max-h-[500px] w-auto rounded-xl object-contain shadow" />`;
+      } else if (item.mediaType === 'video') {
+        content.innerHTML = `<iframe src="${item.mediaData}" class="w-full h-[400px] rounded-xl" frameborder="0" allowfullscreen></iframe>`;
+      }
+
+      document.getElementById('mediaModal').classList.remove('hidden');
+    }
+
+    function closeMediaModal() {
+      document.getElementById('mediaModal').classList.add('hidden');
+      document.getElementById('modalItemContent').innerHTML = '';
+    }
+
+    function renderTeacherTable() {
+      const tbody = document.getElementById('teacherTableBody');
+      tbody.innerHTML = '';
+      schoolData.forEach(item => {
+        const tr = document.createElement('tr');
+        const hasMedia = item.mediaType && item.mediaType !== 'none';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-semibold text-slate-800">${item.title}</td>
+          <td class="py-3 px-3 text-slate-500 text-xs">${item.subject} (${item.grade})</td>
+          <td class="py-3 px-3 text-xs">
+            ${hasMedia ? `<button onclick="openMediaPreview(${item.id})" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-2.5 py-1 rounded-lg font-bold">معاينة</button>` : '<span class="text-slate-400">بدون</span>'}
+          </td>
+          <td class="py-3 px-3 text-center">
+            ${item.approved ? '<span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">معتمد ✔</span>' : '<span class="text-xs font-medium text-amber-700 bg-amber-100 px-3 py-1 rounded-full">قيد المراجعة</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderApprovalTable() {
+      const tbody = document.getElementById('approvalTableBody');
+      tbody.innerHTML = '';
+      schoolData.forEach(item => {
+        const tr = document.createElement('tr');
+        const hasMedia = item.mediaType && item.mediaType !== 'none';
+        tr.innerHTML = `
+          <td class="py-3 px-3 font-semibold text-slate-800">${item.title}</td>
+          <td class="py-3 px-3 text-slate-500 text-xs">${item.subject}</td>
+          <td class="py-3 px-3 text-slate-600 text-xs">${item.teacher}</td>
+          <td class="py-3 px-3 text-xs">
+            ${hasMedia ? `<button onclick="openMediaPreview(${item.id})" class="bg-blue-50 text-blue-700 hover:bg-blue-100 px-2.5 py-1 rounded-lg font-bold">فحص</button>` : '<span class="text-slate-400">نص</span>'}
+          </td>
+          <td class="py-3 px-3">${item.approved ? '<span class="text-xs text-emerald-600 font-bold">معتمد</span>' : '<span class="text-xs text-amber-600 font-semibold">انتظار</span>'}</td>
+          <td class="py-3 px-3 text-center">
+            ${!item.approved ? `<button onclick="approveByHOD(${item.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold">اعتماد</button>` : '<span class="text-xs text-slate-400">معتمد ✔</span>'}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function approveByHOD(id) {
+      const item = schoolData.find(i => i.id === id);
+      if (item) {
+        item.approved = true;
+        renderApprovalTable();
+      }
+    }
+
+    function renderParentMaterials() {
+      const container = document.getElementById('parentMaterialsList');
+      container.innerHTML = '';
+      const approvedItems = schoolData.filter(i => i.approved);
+      if (approvedItems.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-400">لا توجد أعمال معتمدة منشورة.</p>';
+        return;
+      }
+      approvedItems.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-200';
+        div.innerHTML = `
+          <div><span class="text-xs font-bold text-slate-800">${item.title}</span><span class="text-xs text-slate-500 mr-2">(${item.subject})</span></div>
+          <div>${item.mediaType !== 'none' ? `<button onclick="openMediaPreview(${item.id})" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded-lg font-bold">معاينة المرفق</button>` : '<span class="text-xs text-slate-400">محتوى صفي</span>'}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function applySettings() {
+      document.documentElement.style.setProperty('--primary-color', currentSettings.primaryColor);
+      document.documentElement.style.setProperty('--accent-color', currentSettings.accentColor);
+      document.documentElement.style.setProperty('--active-font', currentSettings.fontFamily);
+
+      document.getElementById('siteNameDisplay').innerText = currentSettings.name;
+      document.getElementById('footerSchoolName').innerText = currentSettings.name;
+      document.getElementById('docTitle').innerText = currentSettings.name;
+
+      const pColor = document.getElementById('inputPrimaryColor');
+      if (pColor) {
+        pColor.value = currentSettings.primaryColor;
+        document.getElementById('inputAccentColor').value = currentSettings.accentColor;
+        document.getElementById('inputFontFamily').value = currentSettings.fontFamily;
+        document.getElementById('inputSiteName').value = currentSettings.name;
+        document.getElementById('toggleSpecialEd').checked = currentSettings.showSpecialEd;
+      }
+
+      const specialBtn = document.getElementById('stage-btn-special');
+      if (specialBtn) specialBtn.style.display = currentSettings.showSpecialEd ? 'inline-flex' : 'none';
+    }
+
+    function updateLiveTheme() {
+      currentSettings.primaryColor = document.getElementById('inputPrimaryColor').value;
+      currentSettings.accentColor = document.getElementById('inputAccentColor').value;
+      currentSettings.fontFamily = document.getElementById('inputFontFamily').value;
+      currentSettings.name = document.getElementById('inputSiteName').value || 'المدرسة';
+      currentSettings.showSpecialEd = document.getElementById('toggleSpecialEd').checked;
+
+      localStorage.setItem('app_school_settings', JSON.stringify(currentSettings));
+      applySettings();
+    }
+
+    function resetSettingsToDefault() {
+      if (confirm('استعادة الإعدادات؟')) {
+        currentSettings = { ...defaultSettings };
+        localStorage.setItem('app_school_settings', JSON.stringify(currentSettings));
+        applySettings();
+      }
+    }
+
+    function switchTab(tab) {
+      const sections = ['home', 'classes', 'teacher', 'approval', 'admin', 'parent', 'dev-settings', 'login'];
+      sections.forEach(s => {
+        const el = document.getElementById(`sec-${s}`);
+        if (el) el.classList.add('hidden');
+        const t = document.getElementById(`tab-${s}`);
+        if (t) t.classList.remove('bg-white/20');
+      });
+
+      const activeSec = document.getElementById(`sec-${tab}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      const activeTab = document.getElementById(`tab-${tab}`);
+      if (activeTab) activeTab.classList.add('bg-white/20');
+
+      if (tab === 'classes') selectStage(currentActiveStage);
+      if (tab === 'teacher') renderTeacherTable();
+      if (tab === 'approval') renderApprovalTable();
+      if (tab === 'parent') renderParentMaterials();
+      if (tab === 'home') renderNews();
+    }
+
+    function handleUnifiedLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const pass = document.getElementById('loginPassword').value.trim();
+
+      const found = registeredUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.pass === pass);
+      currentUser = found ? { ...found } : { email, role: 'parent', name: 'ولي أمر الطالب', isHOD: false };
+      applyRoleNavigation();
+    }
+
+    function applyRoleNavigation() {
+      document.getElementById('tab-teacher').classList.add('hidden');
+      document.getElementById('tab-approval').classList.add('hidden');
+      document.getElementById('tab-admin').classList.add('hidden');
+      document.getElementById('tab-parent').classList.add('hidden');
+      document.getElementById('tab-dev-settings').classList.add('hidden');
+
+      if (currentUser.role === 'dev') {
+        document.getElementById('tab-dev-settings').classList.remove('hidden');
+        switchTab('dev-settings');
+      } else if (currentUser.role === 'admin') {
+        document.getElementById('tab-admin').classList.remove('hidden');
+        switchTab('admin');
+      } else if (currentUser.role === 'teacher') {
+        document.getElementById('tab-teacher').classList.remove('hidden');
+        if (currentUser.isHOD) document.getElementById('tab-approval').classList.remove('hidden');
+        document.getElementById('teacherGreetingTitle').innerText = `بوابة المعلم - ${currentUser.name}`;
+        switchTab('teacher');
+      } else {
+        document.getElementById('tab-parent').classList.remove('hidden');
+        switchTab('parent');
+      }
+
+      document.getElementById('authNavArea').innerHTML = `
+        <button onclick="logout()" class="bg-rose-600 hover:bg-rose-500 text-white px-3 py-1.5 rounded-xl font-bold transition text-xs">
+          خروج (${currentUser.isHOD ? 'رئيس قسم' : currentUser.name})
+        </button>
+      `;
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('tab-teacher').classList.add('hidden');
+      document.getElementById('tab-approval').classList.add('hidden');
+      document.getElementById('tab-admin').classList.add('hidden');
+      document.getElementById('tab-parent').classList.add('hidden');
+      document.getElementById('tab-dev-settings').classList.add('hidden');
+
+      document.getElementById('authNavArea').innerHTML = `
+        <button onclick="switchTab('login')" id="tab-login" class="bg-custom-accent hover:opacity-90 text-white px-4 py-1.5 rounded-xl font-bold transition shadow-sm">
+          تسجيل الدخول
+        </button>
+      `;
+      switchTab('home');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.altKey && (e.key === 'M' || e.key === 'm' || e.key === 'ة')) {
+        e.preventDefault();
+        openDevViaSecret();
+      }
+    });
+
+    function handleSecretLogoClick() {
+      secretLogoClicks++;
+      clearTimeout(secretClickTimer);
+      secretClickTimer = setTimeout(() => { secretLogoClicks = 0; }, 600);
+      if (secretLogoClicks >= 2) {
+        secretLogoClicks = 0;
+        openDevViaSecret();
+      }
+    }
+
+    function openDevViaSecret() {
+      const pin = prompt('أدخل الرمز السري للمطور:');
+      if (pin === 'dev2026') {
+        currentUser = registeredUsers.find(u => u.role === 'dev');
+        applyRoleNavigation();
+      } else if (pin !== null) {
+        alert('الرمز غير صحيح!');
+      }
+    }
+
+    function selectStage(stage) {
+      currentActiveStage = stage;
+      ['primary', 'middle', 'secondary', 'special'].forEach(b => {
+        const btn = document.getElementById(`stage-btn-${b}`);
+        if (btn) {
+          btn.className = b === stage 
+            ? 'stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-custom-accent text-white shadow-sm transition'
+            : 'stage-btn px-5 py-2.5 rounded-xl font-bold text-sm bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition';
+        }
+      });
+
+      const grid = document.getElementById('classesGrid');
+      grid.innerHTML = '';
+      const list = stageClassesData[stage] || [];
+
+      list.forEach((c, idx) => {
+        const card = document.createElement('div');
+        const isSpec = stage === 'special';
+        card.className = `bg-white p-5 rounded-2xl border ${isSpec ? 'border-emerald-200 hover:border-emerald-500' : 'border-slate-200 hover:border-custom-accent'} text-center shadow-sm transition hover:shadow-md`;
+        card.innerHTML = `
+          <div class="w-12 h-12 ${isSpec ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-50 text-indigo-700'} rounded-2xl flex items-center justify-center mx-auto text-lg font-bold mb-3">${isSpec ? '🌱' : idx + 1}</div>
+          <h4 class="font-bold text-slate-800 text-sm">${c.name}</h4>
+          <p class="text-xs text-slate-400 mt-1">${c.count}</p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function renderNews() {
+      const container = document.getElementById('newsContainer');
+      container.innerHTML = '';
+      newsList.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-sm';
+        card.innerHTML = `
+          <span class="text-xs bg-indigo-100 text-indigo-700 px-2.5 py-0.5 rounded-full font-semibold">${n.tag}</span>
+          <h4 class="font-bold text-base mt-3 mb-2 text-slate-900">${n.title}</h4>
+          <p class="text-sm text-slate-600">${n.desc}</p>
+          <span class="text-xs text-slate-400 mt-4 block">${n.time}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function handleAddNewItem(e) {
+      e.preventDefault();
+      newsList.unshift({
+        tag: document.getElementById('newsTag').value,
+        title: document.getElementById('newsTitle').value,
+        desc: document.getElementById('newsContent').value,
+        time: 'الآن'
+      });
+      alert('تم نشر الخبر بنجاح!');
+      e.target.reset();
+      renderNews();
+    }
+
+    function handleCreateStaff(e) {
+      e.preventDefault();
+      const name = document.getElementById('newStaffName').value;
+      const email = document.getElementById('newStaffEmail').value;
+      const pass = document.getElementById('newStaffPass').value;
+      const roleChoice = document.getElementById('newStaffRole').value;
+
+      registeredUsers.push({
+        email,
+        pass,
+        role: roleChoice === 'admin' ? 'admin' : 'teacher',
+        name,
+        isHOD: roleChoice === 'hod'
+      });
+
+      alert(`تم تسجيل (${name}) بنجاح.`);
+      e.target.reset();
+    }
+
+    function triggerFingerprintDemo() {
+      document.getElementById('fingerprintBanner').classList.remove('hidden');
+    }
+
+    applySettings();
+    renderNews();
+    selectStage('primary');
+  </script>
+</body>
+</html>
